@@ -28,7 +28,7 @@ Creator::~Creator(void)
 /******************************************************************************\
 |* Handle everything for a 'create' action
 \******************************************************************************/
-bool Creator::create(bool compress)
+bool Creator::create(bool compress, int numThreads)
 	{
 	bool ok = false;
 
@@ -44,7 +44,7 @@ bool Creator::create(bool compress)
 	\**************************************************************************/
 	_compressor = new Compressor(this);
 	_compressor->setCreator(this);
-	_compressor->compress(compress);
+	_compressor->compress(compress, numThreads);
 
 	/**************************************************************************\
 	|* Wait for a clean exit

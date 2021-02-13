@@ -7,6 +7,8 @@
 int main(int argc, char *argv[])
 	{
 	QCoreApplication a(argc, argv);
+	char threads[32];
+	sprintf(threads, "%d", QThread::idealThreadCount());
 
 	/**************************************************************************\
 	|* Handle the commandline arguments
@@ -25,6 +27,9 @@ int main(int argc, char *argv[])
 	args.add("--help", "-h", false, "false", "Misc", "This wonderful help text");
 	args.add("--verbose", "-v", false, "false", "Misc", "Whether to be chatty");
 
+	args.add("--num-threads", "-#", true, threads, "Misc",
+			"Number of file i/o threads");
+
 	args.process(argc, argv);
 
 	if (args.flag("-h"))
@@ -40,6 +45,10 @@ int main(int argc, char *argv[])
 		creator.setVerbose(args.flag("-v"));
 		creator.setPaths(args.remainingArgs());
 
-		creator.create(args.flag("-j"));
+		int numThreads = args.value("-#").toInt();
+		if (numThreads == 0)
+			numThreads = 2;
+
+		creator.create(args.flag("-j"), numThreads);
 		}
 	}

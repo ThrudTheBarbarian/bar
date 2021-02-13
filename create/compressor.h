@@ -28,7 +28,7 @@ class Compressor : public QObject
 		/**********************************************************************\
 		|* Start compressing as files become available
 		\**********************************************************************/
-		bool compress(bool useCompression);
+		bool compress(bool useCompression, int threadCount);
 
 	signals:
 

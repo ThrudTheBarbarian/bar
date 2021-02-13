@@ -14,7 +14,6 @@ Compressor::Compressor(QObject *parent)
 		   ,_creator(nullptr)
 	{
 	// Make sure we're cooking with gas
-	_pool.setMaxThreadCount(2);//QThread::idealThreadCount());
 	}
 
 /******************************************************************************\
@@ -28,10 +27,11 @@ Compressor::~Compressor(void)
 /******************************************************************************\
 |* Create the thread-pool and start workers going
 \******************************************************************************/
-bool Compressor::compress(bool useCompression)
+bool Compressor::compress(bool useCompression, int threadCount)
 	{
 	bool ok = false;
 
+	_pool.setMaxThreadCount(threadCount);
 	for (int i=0; i<_pool.maxThreadCount(); i++)
 		{
 		FileReader *reader = new FileReader(_creator);

@@ -43,7 +43,7 @@ class Creator: public QObject
 		/**********************************************************************\
 		|* Create action implementation
 		\**********************************************************************/
-		bool create(bool compress);
+		bool create(bool compress, int numThreads);
 
 		/**********************************************************************\
 		|* Handle the items list changes
