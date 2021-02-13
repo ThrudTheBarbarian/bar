@@ -11,6 +11,7 @@ Creator::Creator(QObject *parent)
 		   :QObject(parent)
 		   ,_file("")
 		   ,_verbose(false)
+		   ,_scanComplete(false)
 		   ,_scanner(nullptr)
 		   ,_compressor(nullptr)
 	{}
@@ -21,6 +22,7 @@ Creator::Creator(QObject *parent)
 Creator::~Creator(void)
 	{
 	DELETE(_scanner);
+	DELETE(_compressor);
 	}
 
 /******************************************************************************\
@@ -41,7 +43,7 @@ bool Creator::create(bool compress)
 	|* Start the compressor (which doesn't necessarily compress files) going
 	\**************************************************************************/
 	_compressor = new Compressor(this);
-	_compressor->setScanner(_scanner);
+	_compressor->setCreator(this);
 	_compressor->compress(compress);
 
 	/**************************************************************************\
@@ -53,14 +55,23 @@ bool Creator::create(bool compress)
 	}
 
 
-#pragma mark - Public slots
+/******************************************************************************\
+|* Add an item into the list
+\******************************************************************************/
+void Creator::appendItem(FilesystemItem *fsi)
+	{
+	QMutexLocker guard(&_mutex);
+	_items.append(fsi);
+	fprintf(stderr, "[%s](%d)\n", qPrintable(fsi->name()), (int)_items.size());
+	}
 
 /******************************************************************************\
-|* We're all done scanning directories
+|* Remove an item from the list
 \******************************************************************************/
-void Creator::scanComplete(void)
+FilesystemItem * Creator::nextItem(void)
 	{
-	fprintf(stderr, "Scan complete\n");
+	QMutexLocker guard(&_mutex);
+	return (_items.size() > 0) ? _items.takeFirst() : &_noItem;
 	}
 
 #pragma mark - Private Methods

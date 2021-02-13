@@ -6,7 +6,7 @@
 
 #include "properties.h"
 
-class Compressor;
+class Creator;
 
 class FileReader : public QRunnable
 	{
@@ -16,7 +16,7 @@ class FileReader : public QRunnable
 	GETSET(bool, shouldCompress, ShouldCompress);
 
 	private:
-		Compressor *		_parent;			// Link back to parent
+		Creator *			_creator;			// Link back to creator
 
 		/**********************************************************************\
 		|* Handle everything to do with a single FilesystemItem
@@ -27,7 +27,7 @@ class FileReader : public QRunnable
 		/**********************************************************************\
 		|* Constructor
 		\**********************************************************************/
-		FileReader(Compressor *parent);
+		FileReader(Creator *parent);
 
 		/**********************************************************************\
 		|* Run the task

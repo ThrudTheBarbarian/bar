@@ -1,4 +1,5 @@
 #include "compressor.h"
+#include "creator.h"
 #include "dirscanner.h"
 #include "filereader.h"
 #include "filesystemitem.h"
@@ -6,8 +7,8 @@
 /******************************************************************************\
 |* Constructor
 \******************************************************************************/
-FileReader::FileReader(Compressor *parent)
-		   :_parent(parent)
+FileReader::FileReader(Creator *creator)
+		   :_creator(creator)
 	{}
 
 
@@ -17,15 +18,18 @@ FileReader::FileReader(Compressor *parent)
 void FileReader::run(void)
 	{
 	bool allDone	= false;
-	DirScanner *ds	= _parent->scanner();
 
 	while (!allDone)
 		{
-		FilesystemItem *item = ds->nextItem();
+		FilesystemItem *item = _creator->nextItem();
 		if (item->ok())
 			_handleItem(item);
 		else
-			usleep(250000);
+			{
+			allDone = _creator->scanComplete();
+			if (!allDone)
+				usleep(250000);
+			}
 		}
 	}
 

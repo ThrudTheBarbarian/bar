@@ -6,7 +6,7 @@
 
 #include "properties.h"
 
-class DirScanner;
+class Creator;
 
 class Compressor : public QObject
 	{
@@ -16,13 +16,14 @@ class Compressor : public QObject
 	|* Properties
 	\**************************************************************************/
 	GET(QThreadPool, pool);					// The compression threadpool
-	GETSET(DirScanner *, scanner, Scanner);	// The directory scanner
+	GETSET(Creator *, creator, Creator);	// The 'create' controller
 
 	public:
 		/**********************************************************************\
 		|* Constructors/Destructors
 		\**********************************************************************/
 		explicit Compressor(QObject *parent = nullptr);
+		~Compressor(void);
 
 		/**********************************************************************\
 		|* Start compressing as files become available

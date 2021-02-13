@@ -33,7 +33,7 @@ void DirScanner::run(void)
 		{
 		QFileInfo fi(path);
 		FilesystemItem *fsi = new FilesystemItem(fi);
-		_appendItem(fsi);
+		_parent->appendItem(fsi);
 
 		if (fsi->type() == FilesystemItem::TYPE_DIR)
 			{
@@ -42,9 +42,9 @@ void DirScanner::run(void)
 				{
 				di.next();
 				fsi = new FilesystemItem(di.fileInfo());
-				_appendItem(fsi);
+				_parent->appendItem(fsi);
 
-				while (_items.size() > 500)
+				while (_parent->items().size() > 500)
 					{
 					fprintf(stderr, "Sleeping scanner\n");
 					sleep(1);
@@ -52,24 +52,6 @@ void DirScanner::run(void)
 				}
 			}
 		}
-	_parent->scanComplete();
+	_parent->setScanComplete(true);
 	}
 
-/******************************************************************************\
-|* Add an item into the list
-\******************************************************************************/
-void DirScanner::_appendItem(FilesystemItem *fsi)
-	{
-	QMutexLocker guard(&_mutex);
-	_items.append(fsi);
-	fprintf(stderr, "[%s](%d)\n", qPrintable(fsi->name()), (int)_items.size());
-	}
-
-/******************************************************************************\
-|* Remove an item from the list
-\******************************************************************************/
-FilesystemItem * DirScanner::nextItem(void)
-	{
-	QMutexLocker guard(&_mutex);
-	return (_items.size() > 0) ? _items.takeFirst() : &_noItem;
-	}

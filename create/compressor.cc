@@ -1,6 +1,7 @@
 #include <QThreadPool>
 
 #include "compressor.h"
+#include "creator.h"
 #include "filereader.h"
 
 /******************************************************************************\
@@ -10,10 +11,18 @@
 \******************************************************************************/
 Compressor::Compressor(QObject *parent)
 		   :QObject(parent)
-		   ,_scanner(nullptr)
+		   ,_creator(nullptr)
 	{
 	// Make sure we're cooking with gas
 	_pool.setMaxThreadCount(2);//QThread::idealThreadCount());
+	}
+
+/******************************************************************************\
+|* Delete the instance
+\******************************************************************************/
+Compressor::~Compressor(void)
+	{
+	_pool.clear();
 	}
 
 /******************************************************************************\
@@ -25,9 +34,8 @@ bool Compressor::compress(bool useCompression)
 
 	for (int i=0; i<_pool.maxThreadCount(); i++)
 		{
-		FileReader *reader = new FileReader(this);
+		FileReader *reader = new FileReader(_creator);
 		reader->setShouldCompress(useCompression);
-
 		_pool.start(reader);
 		}
 	return ok;
