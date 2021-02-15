@@ -43,10 +43,13 @@ void FileReader::_handleItem(FilesystemItem* item)
 	/**************************************************************************\
 	|* Read in the file
 	\**************************************************************************/
-	FILE *fp = fopen(qPrintable(item->name()), "rb");
-	if (fp)
+	if (!item->load())
+		_creator->addError(item->lastError());
+	else
 		{
-		// FIXME : read file into allocated RAM
-		fclose(fp);
+		if (_shouldCompress)
+			{
+
+			}
 		}
 	}

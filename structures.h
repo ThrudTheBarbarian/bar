@@ -41,6 +41,19 @@ typedef struct Range
 #define NotFound        ((uint64_t)-1)
 
 /*****************************************************************************\
+|* Used for compression in the filesystemItem class and the compressor class
+\*****************************************************************************/
+typedef struct
+	{
+	uint8_t *		data;
+	int				length;
+	int				state;
+	int				pass;
+	int				start;
+	} DataBuffer;
+
+
+/*****************************************************************************\
 |* Used to iterate over a map using the for: approach, as in:
 |*
 |*  for (Elements<int, std::string> kv : my_map )

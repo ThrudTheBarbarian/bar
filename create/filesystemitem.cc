@@ -13,8 +13,6 @@ FilesystemItem::FilesystemItem(QFileInfo fi)
 			   ,_uid(fi.ownerId())
 			   ,_gid(fi.groupId())
 			   ,_mode(fi.permissions())
-			   ,_fileData(nullptr)
-			   ,_zlibData(nullptr)
 	{
 	_type = (fi.isDir())			? TYPE_DIR
 		  : (fi.isSymLink())		? TYPE_LINK
@@ -31,8 +29,6 @@ FilesystemItem::FilesystemItem(QFileInfo fi)
 \******************************************************************************/
 FilesystemItem::FilesystemItem(void)
 			   :_ok(false)
-			   ,_fileData(nullptr)
-			   ,_zlibData(nullptr)
 	{}
 
 
@@ -41,6 +37,46 @@ FilesystemItem::FilesystemItem(void)
 \******************************************************************************/
 FilesystemItem::~FilesystemItem(void)
 	{
-	DELETE(_fileData);
-	DELETE(_zlibData);
+	}
+
+/******************************************************************************\
+|* Load the file into RAM
+\******************************************************************************/
+int FilesystemItem::load(DataBuffer *buffer)
+	{
+	bool ok = false;
+
+	FILE *fp = fopen(qPrintable(_name), "rb");
+	if (fp)
+		{
+		_fileData = new uint8_t [_size];
+		if (_fileData != nullptr)
+			{
+			if (fread(_fileData, _size, 1, fp) == 1)
+				ok = true;
+			else
+				_lastError = QString("Cannot read %1 bytes from %2")
+								.arg(_size).arg(_name);
+			}
+		else
+			_lastError = QString("Cannot alloc %1 bytes for %2")
+						.arg(_size).arg(_name);
+
+		fclose(fp);
+		}
+	else
+		_lastError = QString("Cannot open '%1' for read").arg(_name);
+
+	return ok;
+	}
+
+/******************************************************************************\
+|* Compress a loaded file
+\******************************************************************************/
+int FilesystemItem::compress(DataBuffer *buffer)
+	{
+	bool ok = false;
+
+
+	return ok;
 	}

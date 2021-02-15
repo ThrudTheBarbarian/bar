@@ -51,6 +51,12 @@ bool Creator::create(bool compress, int numThreads)
 	\**************************************************************************/
 	_scanner->wait();
 
+	/**************************************************************************\
+	|* Show any errors
+	\**************************************************************************/
+	foreach (QString msg, _errors)
+		fprintf(stderr, "%s\n", qPrintable(msg));
+
 	return ok;
 	}
 
@@ -72,6 +78,14 @@ FilesystemItem * Creator::nextItem(void)
 	{
 	QMutexLocker guard(&_mutex);
 	return (_items.size() > 0) ? _items.takeFirst() : &_noItem;
+	}
+
+/******************************************************************************\
+|* Add an error
+\******************************************************************************/
+void Creator::addError(QString msg)
+	{
+	_errors.append(msg);
 	}
 
 #pragma mark - Private Methods

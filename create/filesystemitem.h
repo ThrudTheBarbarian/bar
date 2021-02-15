@@ -22,6 +22,7 @@ class FilesystemItem
 			TYPE_DIR,
 			TYPE_FILE,
 			TYPE_LINK,
+			TYPE_ZFILE,
 			TYPE_INVALID
 			};
 
@@ -38,8 +39,6 @@ class FilesystemItem
 	GETSET(gid_t, gid, Gid);
 	GETSET(mode_t, mode, Mode);
 	GETSET(QString, link, Link);
-	GETSET(uint8_t *, fileData, FileData);
-	GETSET(uint8_t *, zlibData, ZlibData);
 
 	public:
 		/**********************************************************************\
@@ -48,6 +47,16 @@ class FilesystemItem
 		explicit FilesystemItem(void);
 		explicit FilesystemItem(QFileInfo fi);
 		~FilesystemItem(void);
+
+		/**********************************************************************\
+		|* Load the file into the structure
+		\**********************************************************************/
+		int load(DataBuffer *buffer);
+
+		/**********************************************************************\
+		|* Load the file into the structure
+		\**********************************************************************/
+		int compress(DataBuffer *buffer);
 
 	signals:
 

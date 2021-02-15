@@ -32,6 +32,7 @@ class Creator: public QObject
 		Compressor		*_compressor;		// Data compressor
 		QMutex			_mutex;				// Prevent races
 		FilesystemItem	_noItem;			// Used as an invalid flag
+		QStringList		_errors;			// List of errors found
 
 	public:
 		/**********************************************************************\
@@ -51,6 +52,10 @@ class Creator: public QObject
 		void appendItem(FilesystemItem *item);
 		FilesystemItem * nextItem(void);
 
+		/**********************************************************************\
+		|* Append an error message
+		\**********************************************************************/
+		void addError(QString msg);
 
 	signals:
 		/**********************************************************************\
