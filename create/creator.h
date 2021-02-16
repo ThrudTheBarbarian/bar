@@ -23,6 +23,8 @@ class Creator: public QObject
 	GETSET(QStringList, paths, Paths);			// Which file-trees to add
 	GET(FsItemList, items);						// Files we found
 	GETSET(bool, scanComplete, ScanComplete);	// The files scan is complete
+	GETSET(bool, compress, Compress);			// Do we compress
+	GETSET(int, threads, Threads);				// How many threads to use
 
 	private:
 		/**********************************************************************\
@@ -44,7 +46,7 @@ class Creator: public QObject
 		/**********************************************************************\
 		|* Create action implementation
 		\**********************************************************************/
-		bool create(bool compress, int numThreads);
+		bool create(void);
 
 		/**********************************************************************\
 		|* Handle the items list changes

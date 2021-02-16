@@ -29,6 +29,10 @@ class ArgsParser : public QObject
 		\**********************************************************************/
 		explicit ArgsParser(QObject *parent = nullptr);
 
+		/**********************************************************************\
+		|* Once constructed in main(), allow global access to the args parser
+		\**********************************************************************/
+		static ArgsParser * sharedInstance(void);
 
 		/**********************************************************************\
 		|* Define a queryable argument.

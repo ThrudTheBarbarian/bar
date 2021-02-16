@@ -1,3 +1,4 @@
+#include "argsparser.h"
 #include "filesystemitem.h"
 #include "macros.h"
 
@@ -29,7 +30,9 @@ FilesystemItem::FilesystemItem(QFileInfo fi)
 \******************************************************************************/
 FilesystemItem::FilesystemItem(void)
 			   :_ok(false)
-	{}
+	{
+	_blockSize = ArgsParser::sharedInstance()->value("-bs").toInt();
+	}
 
 
 /******************************************************************************\
@@ -45,6 +48,16 @@ FilesystemItem::~FilesystemItem(void)
 int FilesystemItem::load(DataBuffer *buffer)
 	{
 	bool ok = false;
+
+	/**************************************************************************\
+	|* If we're passed a virgin DataBuffer, then initialise it with our params.
+	|* Othewise assume we're partway through the process
+	\**************************************************************************/
+	if (buffer->fp == nullptr)
+		{
+		buffer->bufferSize	= (_size >= _blockSize) ? _blockSize : _size;
+		buffer->data		= new uint8_t [buffer->bufferSize];
+		}
 
 	FILE *fp = fopen(qPrintable(_name), "rb");
 	if (fp)

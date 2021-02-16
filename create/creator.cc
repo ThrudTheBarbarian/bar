@@ -1,3 +1,4 @@
+#include "argsparser.h"
 #include "compressor.h"
 #include "creator.h"
 #include "dirscanner.h"
@@ -14,7 +15,16 @@ Creator::Creator(QObject *parent)
 		   ,_scanComplete(false)
 		   ,_scanner(nullptr)
 		   ,_compressor(nullptr)
-	{}
+	{
+	_file			= ArgsParser::sharedInstance()->value("-f");
+	_verbose		= ArgsParser::sharedInstance()->flag("-v");
+	_paths			= ArgsParser::sharedInstance()->remainingArgs();
+	_compress		= ArgsParser::sharedInstance()->flag("-j");
+	_threads		= ArgsParser::sharedInstance()->value("-#").toInt();
+
+	if (_threads == 0)
+		_threads = 2;
+	}
 
 /******************************************************************************\
 |* Destructor
@@ -28,7 +38,7 @@ Creator::~Creator(void)
 /******************************************************************************\
 |* Handle everything for a 'create' action
 \******************************************************************************/
-bool Creator::create(bool compress, int numThreads)
+bool Creator::create(void)
 	{
 	bool ok = false;
 
@@ -44,7 +54,7 @@ bool Creator::create(bool compress, int numThreads)
 	\**************************************************************************/
 	_compressor = new Compressor(this);
 	_compressor->setCreator(this);
-	_compressor->compress(compress, numThreads);
+	_compressor->compress(_compress, _threads);
 
 	/**************************************************************************\
 	|* Wait for a clean exit

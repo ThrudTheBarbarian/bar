@@ -29,16 +29,18 @@ class FilesystemItem
 	/**************************************************************************\
 	|* Properties
 	\**************************************************************************/
-	GETSET(bool, ok, Ok);
+	GETSET(bool, ok, Ok);				// Did we initialise ok ?
 
-	GETSET(QString, name, Name);
-	GETSET(size_t, size, Size);
-	GETSET(int, type, Type);
-	GETSET(time_t, modified, Modified);
-	GETSET(uid_t, uid, Uid);
-	GETSET(gid_t, gid, Gid);
-	GETSET(mode_t, mode, Mode);
-	GETSET(QString, link, Link);
+	GETSET(QString, name, Name);		// File's path relative to archive root
+	GETSET(size_t, size, Size);			// File's size in bytes
+	GETSET(int, type, Type);			// From enumeration above
+	GETSET(time_t, modified, Modified);	// Last modification time (since epoch)
+	GETSET(uid_t, uid, Uid);			// File's user id
+	GETSET(gid_t, gid, Gid);			// File's group id
+	GETSET(mode_t, mode, Mode);			// Permissions state
+	GETSET(QString, link, Link);		// What the link points to
+
+	GET(size_t, blockSize);				// Size of a compressed block
 
 	public:
 		/**********************************************************************\

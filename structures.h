@@ -9,6 +9,7 @@
 #ifndef structures_h
 #define structures_h
 
+#include <stdio.h>
 #include <stdint.h>
 
 #include <map>
@@ -43,14 +44,25 @@ typedef struct Range
 /*****************************************************************************\
 |* Used for compression in the filesystemItem class and the compressor class
 \*****************************************************************************/
-typedef struct
+struct DataBuffer
 	{
-	uint8_t *		data;
-	int				length;
-	int				state;
-	int				pass;
-	int				start;
-	} DataBuffer;
+	FILE *			fp;				// Pointer to the FILE structor
+	uint8_t *		data;			// Memory buffer, capped in size
+	size_t			bufferSize;		// Number of bytes in the buffer
+	size_t			dataSize;		// Number of used bytes in the buffer
+	int				state;			// Internal state
+	int				block;			// Which block we're on
+	int				start;			// Where to start reading from
+
+	DataBuffer() : fp(nullptr),
+				   data(nullptr),
+				   bufferSize(0),
+				   dataSize(0),
+				   state(0),
+				   block(0),
+				   start(0)
+		{}
+	};
 
 
 /*****************************************************************************\

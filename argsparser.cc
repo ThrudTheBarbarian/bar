@@ -5,6 +5,16 @@
 #include "console.h"
 
 /******************************************************************************\
+|* Once constructed in main(), allow global access to the args parser
+\******************************************************************************/
+static ArgsParser * __sharedInstance = nullptr;
+
+ArgsParser * ArgsParser::sharedInstance(void)
+	{
+	return __sharedInstance;
+	}
+
+/******************************************************************************\
 |* Parse commandline arguments and generate the usage() function
 |*
 |* Idea is that you ...
@@ -17,6 +27,7 @@
 ArgsParser::ArgsParser(QObject *parent)
 		   :QObject(parent)
 	{
+	__sharedInstance = this;
 	}
 
 /******************************************************************************\

@@ -27,8 +27,10 @@ int main(int argc, char *argv[])
 	args.add("--help", "-h", false, "false", "Misc", "This wonderful help text");
 	args.add("--verbose", "-v", false, "false", "Misc", "Whether to be chatty");
 
-	args.add("--num-threads", "-#", true, threads, "Misc",
+	args.add("--num-threads", "-#", true, threads, "Compression",
 			"Number of file i/o threads");
+	args.add("--block-size", "-bs", true, "10M", "Compression",
+			"Max size of a compressed/file block");
 
 	args.process(argc, argv);
 
@@ -41,14 +43,6 @@ int main(int argc, char *argv[])
 	if (args.flag("-c"))
 		{
 		Creator creator(&a);
-		creator.setFile(args.value("-f"));
-		creator.setVerbose(args.flag("-v"));
-		creator.setPaths(args.remainingArgs());
-
-		int numThreads = args.value("-#").toInt();
-		if (numThreads == 0)
-			numThreads = 2;
-
-		creator.create(args.flag("-j"), numThreads);
+		creator.create();
 		}
 	}
