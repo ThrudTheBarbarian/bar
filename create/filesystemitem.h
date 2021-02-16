@@ -26,6 +26,13 @@ class FilesystemItem
 			TYPE_INVALID
 			};
 
+		typedef enum
+			{
+			IO_PENDING	= 0,
+			IO_READING,
+			IO_DONE
+			} IoState;
+
 	/**************************************************************************\
 	|* Properties
 	\**************************************************************************/
@@ -41,6 +48,7 @@ class FilesystemItem
 	GETSET(QString, link, Link);		// What the link points to
 
 	GET(size_t, blockSize);				// Size of a compressed block
+	GET(QString, lastError);			// Last error encountered
 
 	public:
 		/**********************************************************************\

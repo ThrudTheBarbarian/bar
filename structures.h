@@ -50,6 +50,7 @@ struct DataBuffer
 	uint8_t *		data;			// Memory buffer, capped in size
 	size_t			bufferSize;		// Number of bytes in the buffer
 	size_t			dataSize;		// Number of used bytes in the buffer
+	size_t			consumed;		// Number of bytes read thus far
 	int				state;			// Internal state
 	int				block;			// Which block we're on
 	int				start;			// Where to start reading from
@@ -58,6 +59,7 @@ struct DataBuffer
 				   data(nullptr),
 				   bufferSize(0),
 				   dataSize(0),
+				   consumed(0),
 				   state(0),
 				   block(0),
 				   start(0)

@@ -16,7 +16,8 @@ SOURCES += \
         create/dirscanner.cc \
         create/filereader.cc \
         create/filesystemitem.cc \
-        main.cc
+        main.cc \
+        util/scalednumber.cc
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -34,4 +35,5 @@ HEADERS += \
     debug.h \
     macros.h \
     properties.h \
-    structures.h
+    structures.h \
+    util/scalednumber.h

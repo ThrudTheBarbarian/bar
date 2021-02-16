@@ -2,6 +2,8 @@
 #include "filesystemitem.h"
 #include "macros.h"
 
+#include "util/scalednumber.h"
+
 /******************************************************************************\
 |* Represent anything we find on disk
 |*
@@ -14,6 +16,7 @@ FilesystemItem::FilesystemItem(QFileInfo fi)
 			   ,_uid(fi.ownerId())
 			   ,_gid(fi.groupId())
 			   ,_mode(fi.permissions())
+			   ,_lastError("")
 	{
 	_type = (fi.isDir())			? TYPE_DIR
 		  : (fi.isSymLink())		? TYPE_LINK
@@ -31,7 +34,8 @@ FilesystemItem::FilesystemItem(QFileInfo fi)
 FilesystemItem::FilesystemItem(void)
 			   :_ok(false)
 	{
-	_blockSize = ArgsParser::sharedInstance()->value("-bs").toInt();
+	QString bs	= ArgsParser::sharedInstance()->value("-bs");
+	_blockSize	= ScaledNumber::toNumber(bs);
 	}
 
 
@@ -47,7 +51,7 @@ FilesystemItem::~FilesystemItem(void)
 \******************************************************************************/
 int FilesystemItem::load(DataBuffer *buffer)
 	{
-	bool ok = false;
+	bool ok = true;
 
 	/**************************************************************************\
 	|* If we're passed a virgin DataBuffer, then initialise it with our params.
@@ -55,31 +59,54 @@ int FilesystemItem::load(DataBuffer *buffer)
 	\**************************************************************************/
 	if (buffer->fp == nullptr)
 		{
+		buffer->state		= IO_READING;
 		buffer->bufferSize	= (_size >= _blockSize) ? _blockSize : _size;
 		buffer->data		= new uint8_t [buffer->bufferSize];
-		}
-
-	FILE *fp = fopen(qPrintable(_name), "rb");
-	if (fp)
-		{
-		_fileData = new uint8_t [_size];
-		if (_fileData != nullptr)
+		if (buffer->data == nullptr)
 			{
-			if (fread(_fileData, _size, 1, fp) == 1)
-				ok = true;
-			else
-				_lastError = QString("Cannot read %1 bytes from %2")
-								.arg(_size).arg(_name);
+			_lastError	= QString("Cannot alloc %1 bytes for '%2'")
+							.arg(buffer->bufferSize)
+							.arg(_name);
+			ok			= false;
 			}
 		else
-			_lastError = QString("Cannot alloc %1 bytes for %2")
-						.arg(_size).arg(_name);
-
-		fclose(fp);
+			{
+			buffer->fp			= fopen(qPrintable(_name), "rb");
+			if (buffer->fp == nullptr)
+				{
+				_lastError = QString("Cannot open '%1' for read").arg(_name);
+				ok = false;
+				}
+			}
 		}
-	else
-		_lastError = QString("Cannot open '%1' for read").arg(_name);
 
+	/**************************************************************************\
+	|* Now read the appropriate number of bytes into the buffer
+	\**************************************************************************/
+	if (ok)
+		{
+		size_t bytesToRead	= _size - buffer->consumed;
+		bytesToRead			= (bytesToRead > buffer->bufferSize)
+							? buffer->bufferSize
+							: bytesToRead;
+
+		if (fread(buffer->data, bytesToRead, 1, buffer->fp) != 1)
+			{
+			_ok			= false;
+			_lastError	= QString("Cannot read %1 bytes from '%2'")
+							.arg(bytesToRead)
+							.arg(_name);
+			}
+		else
+			buffer->consumed += bytesToRead;
+
+		if (buffer->consumed == _size)
+			{
+			fclose(buffer->fp);
+			buffer->fp		= nullptr;
+			buffer->state	= IO_DONE;
+			}
+		}
 	return ok;
 	}
 
@@ -90,6 +117,8 @@ int FilesystemItem::compress(DataBuffer *buffer)
 	{
 	bool ok = false;
 
+	if (buffer->fp == nullptr)
+		{}
 
 	return ok;
 	}

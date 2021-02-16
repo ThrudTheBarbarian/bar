@@ -38,18 +38,31 @@ void FileReader::run(void)
 \******************************************************************************/
 void FileReader::_handleItem(FilesystemItem* item)
 	{
-	fprintf(stderr, "Removed %s\n", item->name().toStdString().c_str());
+	fprintf(stderr, "Doing %s\n", item->name().toStdString().c_str());
 
-	/**************************************************************************\
-	|* Read in the file
-	\**************************************************************************/
-	if (!item->load())
-		_creator->addError(item->lastError());
-	else
+	if (item->type() == FilesystemItem::TYPE_FILE)
 		{
-		if (_shouldCompress)
-			{
+		/**********************************************************************\
+		|* Read in the file
+		\**********************************************************************/
+		DataBuffer data;
+		bool readOk= true;
 
+		while (readOk && (data.state != FilesystemItem::IO_DONE))
+			{
+			data.block ++;
+			readOk = (_shouldCompress)
+					? item->compress(&data)
+					: item->load(&data);
+			}
+
+		//if (readOk)
+			{
+			QString msg = QString("Read %1 bytes from %2 [%3]\n")
+							.arg(data.consumed)
+							.arg(item->name())
+							.arg(readOk);
+			fprintf(stderr, "%s\n", qPrintable(msg));
 			}
 		}
 	}
