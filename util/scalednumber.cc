@@ -18,8 +18,8 @@ int64_t ScaledNumber::toNumber(QString input)
 			case 'm':
 				mult = 1024*1024;
 				break;
-			case 'T':
-			case 't':
+			case 'G':
+			case 'g':
 				mult = 1024*1024*1024;
 				break;
 			}

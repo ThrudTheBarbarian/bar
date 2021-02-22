@@ -8,6 +8,10 @@ CONFIG += sdk_no_version_check
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+INCLUDEPATH += /usr/local/opt/bzip2/include
+
+LIBS += -L/usr/local/opt/bzip2/lib -lbz2
+
 SOURCES += \
         argsparser.cc \
         console.cc \

@@ -31,6 +31,8 @@ int main(int argc, char *argv[])
 			"Number of file i/o threads");
 	args.add("--block-size", "-bs", true, "10M", "Compression",
 			"Max size of a compressed/file block");
+	args.add("--work-factor", "-wf", true, "30", "Compression",
+			"Work factor before fallback to slow routine");
 
 	args.process(argc, argv);
 

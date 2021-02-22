@@ -33,10 +33,17 @@ class FilesystemItem
 			IO_DONE
 			} IoState;
 
+		enum
+			{
+			FLAG_COMPRESS	= (1<<0)
+			};
+
 	/**************************************************************************\
 	|* Properties
 	\**************************************************************************/
 	GETSET(bool, ok, Ok);				// Did we initialise ok ?
+	GET(bool, verbose);					// Whether to be chatty
+	GET(int, workFactor);				// Whether to be chatty
 
 	GETSET(QString, name, Name);		// File's path relative to archive root
 	GETSET(size_t, size, Size);			// File's size in bytes
@@ -49,6 +56,13 @@ class FilesystemItem
 
 	GET(size_t, blockSize);				// Size of a compressed block
 	GET(QString, lastError);			// Last error encountered
+	GET(int, level);					// The compression level 1..9
+
+	private:
+		/**********************************************************************\
+		|* Prepare a databuffer if necessary
+		\**********************************************************************/
+		bool _prepareBuffer(DataBuffer *buffer);
 
 	public:
 		/**********************************************************************\
@@ -61,12 +75,12 @@ class FilesystemItem
 		/**********************************************************************\
 		|* Load the file into the structure
 		\**********************************************************************/
-		int load(DataBuffer *buffer);
+		bool load(DataBuffer *buffer);
 
 		/**********************************************************************\
 		|* Load the file into the structure
 		\**********************************************************************/
-		int compress(DataBuffer *buffer);
+		bool compress(DataBuffer *buffer);
 
 	signals:
 

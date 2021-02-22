@@ -17,6 +17,10 @@
 #include <string>
 #include <vector>
 
+#include <bzlib.h>
+
+#include "macros.h"
+
 /*****************************************************************************\
 |* Basically a clone of NSRange
 \*****************************************************************************/
@@ -47,23 +51,37 @@ typedef struct Range
 struct DataBuffer
 	{
 	FILE *			fp;				// Pointer to the FILE structor
-	uint8_t *		data;			// Memory buffer, capped in size
+	char *			in;				// Memory buffer, capped in size
+	char *			out;			// Memory buffer, capped in size
 	size_t			bufferSize;		// Number of bytes in the buffer
 	size_t			dataSize;		// Number of used bytes in the buffer
 	size_t			consumed;		// Number of bytes read thus far
 	int				state;			// Internal state
 	int				block;			// Which block we're on
-	int				start;			// Where to start reading from
+	int				flags;			// Where to start reading from
+	bz_stream		bzip;			// bzip2 state
 
 	DataBuffer() : fp(nullptr),
-				   data(nullptr),
+				   in(nullptr),
+				   out(nullptr),
 				   bufferSize(0),
 				   dataSize(0),
 				   consumed(0),
 				   state(0),
 				   block(0),
-				   start(0)
+				   flags(0)
 		{}
+
+	~DataBuffer(void)
+		{
+		DELETE_ARRAY(in);
+		DELETE_ARRAY(out);
+		if (fp)
+			{
+			fclose(fp);
+			fp = nullptr;
+			}
+		}
 	};
 
 

@@ -13,7 +13,6 @@ Compressor::Compressor(QObject *parent)
 		   :QObject(parent)
 		   ,_creator(nullptr)
 	{
-	// Make sure we're cooking with gas
 	}
 
 /******************************************************************************\
