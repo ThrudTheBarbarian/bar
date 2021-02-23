@@ -57,12 +57,13 @@ class FilesystemItem
 	GET(size_t, blockSize);				// Size of a compressed block
 	GET(QString, lastError);			// Last error encountered
 	GET(int, level);					// The compression level 1..9
+	GET(DataBuffer *, data);			// Data state and grouping
 
 	private:
 		/**********************************************************************\
 		|* Prepare a databuffer if necessary
 		\**********************************************************************/
-		bool _prepareBuffer(DataBuffer *buffer);
+		bool _prepareBuffer(void);
 
 	public:
 		/**********************************************************************\
@@ -75,12 +76,12 @@ class FilesystemItem
 		/**********************************************************************\
 		|* Load the file into the structure
 		\**********************************************************************/
-		bool load(DataBuffer *buffer);
+		bool load(void);
 
 		/**********************************************************************\
 		|* Load the file into the structure
 		\**********************************************************************/
-		bool compress(DataBuffer *buffer);
+		bool compress(void);
 
 	signals:
 

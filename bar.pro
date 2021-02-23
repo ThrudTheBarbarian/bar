@@ -1,4 +1,5 @@
 QT -= gui
+QT += core
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
@@ -20,6 +21,9 @@ SOURCES += \
         create/dirscanner.cc \
         create/filereader.cc \
         create/filesystemitem.cc \
+        create/writer.cc \
+        create/writerfactory.cc \
+        create/writertofile.cc \
         main.cc \
         util/scalednumber.cc
 
@@ -36,6 +40,9 @@ HEADERS += \
     create/dirscanner.h \
     create/filereader.h \
     create/filesystemitem.h \
+    create/writer.h \
+    create/writerfactory.h \
+    create/writertofile.h \
     debug.h \
     macros.h \
     properties.h \

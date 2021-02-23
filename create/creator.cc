@@ -2,6 +2,8 @@
 #include "compressor.h"
 #include "creator.h"
 #include "dirscanner.h"
+#include "writer.h"
+#include "writerfactory.h"
 
 /******************************************************************************\
 |* Handle all the creation logic, basically if a user uses -c, it happens here
@@ -50,6 +52,13 @@ bool Creator::create(void)
 	_scanner->start();
 
 	/**************************************************************************\
+	|* Start the writer going
+	\**************************************************************************/
+	_writer = WriterFactory::writerForDevice(_file);
+	_writer->setCreator(this);
+	_writer->start();
+
+	/**************************************************************************\
 	|* Start the compressor (which doesn't necessarily compress files) going
 	\**************************************************************************/
 	_compressor = new Compressor(this);
@@ -60,6 +69,7 @@ bool Creator::create(void)
 	|* Wait for a clean exit
 	\**************************************************************************/
 	_scanner->wait();
+	_writer->wait();
 
 	/**************************************************************************\
 	|* Show any errors
@@ -72,6 +82,14 @@ bool Creator::create(void)
 
 
 /******************************************************************************\
+|* Return whether we've finished scanning and reading all the files
+\******************************************************************************/
+bool Creator::creationComplete(void)
+	{
+	return (_scanComplete && (_active.isEmpty()));
+	}
+
+/******************************************************************************\
 |* Add an item into the list
 \******************************************************************************/
 void Creator::appendItem(FilesystemItem *fsi)
@@ -79,6 +97,15 @@ void Creator::appendItem(FilesystemItem *fsi)
 	QMutexLocker guard(&_mutex);
 	_items.append(fsi);
 	fprintf(stderr, "[%s](%d)\n", qPrintable(fsi->name()), (int)_items.size());
+	}
+
+/******************************************************************************\
+|* Determine if the reads have all been done
+\******************************************************************************/
+bool Creator::itemsToDo(void)
+	{
+	QMutexLocker guard(&_mutex);
+	return (_items.size() == 0);
 	}
 
 /******************************************************************************\
@@ -98,5 +125,29 @@ void Creator::addError(QString msg)
 	_errors.append(msg);
 	}
 
+
+/******************************************************************************\
+|* Add the file-reader to the list of active file-readers
+\******************************************************************************/
+void Creator::readerFinished(FileReader *reader)
+	{
+	QMutexLocker guard(&_mutex);
+	if (!_active.remove(reader))
+		{
+		fprintf(stderr, "Cannot remove reader %p", reader);
+		}
+	}
+
+
+/******************************************************************************\
+|* Add the file-reader to the list of active file-readers
+\******************************************************************************/
+void Creator::addReader(FileReader *reader)
+	{
+	QMutexLocker guard(&_mutex);
+	_active.insert(reader);
+	}
+
 #pragma mark - Private Methods
+
 

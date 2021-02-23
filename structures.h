@@ -74,8 +74,10 @@ struct DataBuffer
 
 	~DataBuffer(void)
 		{
-		DELETE_ARRAY(in);
-		DELETE_ARRAY(out);
+		if (in != nullptr)
+			DELETE_ARRAY(in);
+		if (out != nullptr)
+			DELETE_ARRAY(out);
 		if (fp)
 			{
 			fclose(fp);

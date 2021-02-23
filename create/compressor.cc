@@ -39,3 +39,4 @@ bool Compressor::compress(bool useCompression, int threadCount)
 		}
 	return ok;
 	}
+

@@ -2,11 +2,13 @@
 #define COMPRESSOR_H
 
 #include <QObject>
+#include <QSet>
 #include <QThreadPool>
 
 #include "properties.h"
 
 class Creator;
+class FileReader;
 
 class Compressor : public QObject
 	{
@@ -17,6 +19,9 @@ class Compressor : public QObject
 	\**************************************************************************/
 	GET(QThreadPool, pool);					// The compression threadpool
 	GETSET(Creator *, creator, Creator);	// The 'create' controller
+
+	private:
+		QMutex					_mutex;		// Prevent races
 
 	public:
 		/**********************************************************************\

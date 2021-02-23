@@ -17,6 +17,7 @@ FilesystemItem::FilesystemItem(QFileInfo fi)
 			   ,_gid(fi.groupId())
 			   ,_mode(fi.permissions())
 			   ,_lastError("")
+			   ,_data(nullptr)
 	{
 	_type			= (fi.isDir())			? TYPE_DIR
 					: (fi.isSymLink())		? TYPE_LINK
@@ -29,7 +30,11 @@ FilesystemItem::FilesystemItem(QFileInfo fi)
 	_verbose		= ArgsParser::sharedInstance()->flag("-v");
 	_workFactor		= ArgsParser::sharedInstance()->value("-wf").toInt();
 
-	_ok	  = true;
+	QString bs		= ArgsParser::sharedInstance()->value("-bs");
+	_blockSize		= ScaledNumber::toNumber(bs);
+
+	_data			= new DataBuffer;
+	_ok				= true;
 	}
 
 /******************************************************************************\
@@ -37,9 +42,12 @@ FilesystemItem::FilesystemItem(QFileInfo fi)
 \******************************************************************************/
 FilesystemItem::FilesystemItem(void)
 			   :_ok(false)
+			   ,_data(nullptr)
+
 	{
-	QString bs	= ArgsParser::sharedInstance()->value("-bs");
-	_blockSize	= ScaledNumber::toNumber(bs);
+	QString bs		= ArgsParser::sharedInstance()->value("-bs");
+	_blockSize		= ScaledNumber::toNumber(bs);
+	_data			= new DataBuffer;
 	}
 
 
@@ -48,32 +56,33 @@ FilesystemItem::FilesystemItem(void)
 \******************************************************************************/
 FilesystemItem::~FilesystemItem(void)
 	{
+	DELETE(_data);
 	}
 
 /******************************************************************************\
 |* Load the file into RAM
 \******************************************************************************/
-bool FilesystemItem::load(DataBuffer *buffer)
+bool FilesystemItem::load(void)
 	{
 	if (_size == 0)
 		{
-		buffer->state	= IO_DONE;
+		_data->state	= IO_DONE;
 		return true;
 		}
 
-	bool ok = _prepareBuffer(buffer);
+	bool ok = _prepareBuffer();
 
 	/**************************************************************************\
 	|* Now read the appropriate number of bytes into the buffer
 	\**************************************************************************/
 	if (ok)
 		{
-		size_t bytesToRead	= _size - buffer->consumed;
-		bytesToRead			= (bytesToRead > buffer->bufferSize)
-							? buffer->bufferSize
+		size_t bytesToRead	= _size - _data->consumed;
+		bytesToRead			= (bytesToRead > _data->bufferSize)
+							? _data->bufferSize
 							: bytesToRead;
 
-		if (fread(buffer->out, bytesToRead, 1, buffer->fp) != 1)
+		if (fread(_data->out, bytesToRead, 1, _data->fp) != 1)
 			{
 			_ok			= false;
 			_lastError	= QString("Cannot read %1 bytes from '%2'")
@@ -81,13 +90,16 @@ bool FilesystemItem::load(DataBuffer *buffer)
 							.arg(_name);
 			}
 		else
-			buffer->consumed += bytesToRead;
-
-		if (buffer->consumed == _size)
 			{
-			fclose(buffer->fp);
-			buffer->fp		= nullptr;
-			buffer->state	= IO_DONE;
+			_data->consumed += bytesToRead;
+			_data->dataSize  = bytesToRead;
+			}
+
+		if (_data->consumed == _size)
+			{
+			fclose(_data->fp);
+			_data->fp		= nullptr;
+			_data->state	= IO_DONE;
 			}
 		}
 	return ok;
@@ -96,16 +108,16 @@ bool FilesystemItem::load(DataBuffer *buffer)
 /******************************************************************************\
 |* Compress a loaded file
 \******************************************************************************/
-bool FilesystemItem::compress(DataBuffer *buffer)
+bool FilesystemItem::compress(void)
 	{
-	buffer->flags |= FLAG_COMPRESS;
+	_data->flags |= FLAG_COMPRESS;
 	if (_size == 0)
 		{
-		buffer->state	= IO_DONE;
+		_data->state	= IO_DONE;
 		return true;
 		}
 
-	bool ok = _prepareBuffer(buffer);
+	bool ok = _prepareBuffer();
 
 	/**************************************************************************\
 	|* Start to handle the compression algorithm
@@ -115,9 +127,9 @@ bool FilesystemItem::compress(DataBuffer *buffer)
 		/**********************************************************************\
 		|* Initialise BZ2 if necessary
 		\**********************************************************************/
-		if (buffer->consumed == 0)
+		if (_data->consumed == 0)
 			{
-			int status = BZ2_bzCompressInit(&(buffer->bzip),
+			int status = BZ2_bzCompressInit(&(_data->bzip),
 											9,
 											_verbose ? 1 : 0,
 											_workFactor);
@@ -132,22 +144,24 @@ bool FilesystemItem::compress(DataBuffer *buffer)
 				_lastError = QString("Ran out of memory");
 				}
 			}
-		else if (buffer->consumed == _size)
+		else if (_data->consumed == _size)
 			{
-			int status = BZ2_bzCompress(&(buffer->bzip), BZ_FINISH);
+			int status = BZ2_bzCompress(&(_data->bzip), BZ_FINISH);
+			_data->dataSize = _data->bzip.avail_out;
+
 			if (status == BZ_STREAM_END)
-				buffer->state = IO_DONE;
+				_data->state = IO_DONE;
 			}
 		else
 			{
 			/******************************************************************\
 			|* Compress another packet
 			\******************************************************************/
-			size_t max	= buffer->bufferSize;
-			size_t left = _size - buffer->consumed;
+			size_t max	= _data->bufferSize;
+			size_t left = _size - _data->consumed;
 			size_t size = (left > max) ? max : left;
 
-			if (fread(buffer->in, size, 1, buffer->fp) != 1)
+			if (fread(_data->in, size, 1, _data->fp) != 1)
 				{
 				ok = false;
 				_lastError = QString("Couldn't read %1 bytes from %2").
@@ -155,19 +169,20 @@ bool FilesystemItem::compress(DataBuffer *buffer)
 				}
 			else
 				{
-				buffer->bzip.avail_in = size;
-				buffer->bzip.next_in  = buffer->in;
-				buffer->bzip.next_out = buffer->out;
-				buffer->bzip.avail_out = buffer->bufferSize;
-				buffer->consumed += size;
+				_data->bzip.avail_in = size;
+				_data->bzip.next_in  = _data->in;
+				_data->bzip.next_out = _data->out;
+				_data->bzip.avail_out = _data->bufferSize;
+				_data->consumed += size;
 
-				int status = BZ2_bzCompress(&(buffer->bzip), BZ_RUN);
+				int status = BZ2_bzCompress(&(_data->bzip), BZ_RUN);
 				if (status != BZ_RUN_OK)
 					{
 					ok = false;
 					_lastError = QString("Error: Got %1 from bzCompress(%2)").
 									arg(status).arg(_name);
 					}
+				_data->dataSize = _data->bzip.avail_out;
 				}
 			}
 		}
@@ -181,25 +196,25 @@ bool FilesystemItem::compress(DataBuffer *buffer)
 |* If we're passed a virgin DataBuffer, then initialise it with our params.
 |* Othewise assume we're partway through the process
 \******************************************************************************/
-bool FilesystemItem::_prepareBuffer(DataBuffer *buffer)
+bool FilesystemItem::_prepareBuffer(void)
 	{
 	bool ok = true;
 
-	if (buffer->fp == nullptr)
+	if (_data->fp == nullptr)
 		{
-		buffer->state		= IO_READING;
-		buffer->bufferSize	= (_size >= _blockSize) ? _blockSize : _size;
+		_data->state		= IO_READING;
+		_data->bufferSize	= (_size >= _blockSize) ? _blockSize : _size;
 
 		/**********************************************************************\
 		|* Allocate the input buffer if we're compressing data
 		\**********************************************************************/
-		if ((buffer->flags & FLAG_COMPRESS) == FLAG_COMPRESS)
+		if ((_data->flags & FLAG_COMPRESS) == FLAG_COMPRESS)
 			{
-			buffer->in			= new char[buffer->bufferSize];
-			if (buffer->in == nullptr)
+			_data->in			= new char[_data->bufferSize];
+			if (_data->in == nullptr)
 				{
 				_lastError	= QString("Cannot alloc %1 bytes for '%2'")
-								.arg(buffer->bufferSize)
+								.arg(_data->bufferSize)
 								.arg(_name);
 				ok			= false;
 				}
@@ -210,11 +225,11 @@ bool FilesystemItem::_prepareBuffer(DataBuffer *buffer)
 			/******************************************************************\
 			|* Allocate the output buffer
 			\******************************************************************/
-			buffer->out			= new char[buffer->bufferSize];
-			if (buffer->out == nullptr)
+			_data->out			= new char[_data->bufferSize];
+			if (_data->out == nullptr)
 				{
 				_lastError	= QString("Cannot alloc %1 bytes for '%2'")
-								.arg(buffer->bufferSize)
+								.arg(_data->bufferSize)
 								.arg(_name);
 				ok			= false;
 				}
@@ -223,8 +238,8 @@ bool FilesystemItem::_prepareBuffer(DataBuffer *buffer)
 				/**************************************************************\
 				|* Open the file
 				\**************************************************************/
-				buffer->fp			= fopen(qPrintable(_name), "rb");
-				if (buffer->fp == nullptr)
+				_data->fp			= fopen(qPrintable(_name), "rb");
+				if (_data->fp == nullptr)
 					{
 					_lastError = QString("Cannot open '%1' for read").arg(_name);
 					ok = false;

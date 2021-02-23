@@ -9,6 +9,7 @@
 #define FILTERS															\
 	QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot | QDir::Readable |	\
 	QDir::Writable | QDir::Executable | QDir::Hidden
+
 /******************************************************************************\
 |* Scan directories and files, stat them, and let threads have access to them.
 |* This is the worker thread controlled by Creator
@@ -21,7 +22,8 @@
 |* Constructor
 \******************************************************************************/
 DirScanner::DirScanner(Creator *parent)
-		   :_parent(parent)
+		   :QThread()
+		   ,_parent(parent)
 	{}
 
 /******************************************************************************\
