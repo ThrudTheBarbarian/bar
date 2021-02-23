@@ -70,7 +70,11 @@ struct DataBuffer
 				   state(0),
 				   block(0),
 				   flags(0)
-		{}
+		{
+		bzip.bzalloc = nullptr;
+		bzip.bzfree  = nullptr;
+		bzip.opaque  = nullptr;
+		}
 
 	~DataBuffer(void)
 		{

@@ -60,13 +60,19 @@ bool writerToFile::persist(FilesystemItem *item)
 	{
 	bool ok = true;
 
-	// FIXME - need to check for 0-length files
-	if (fwrite(item->data()->out, item->data()->dataSize, 1, _fp) != 1)
+	/**************************************************************************\
+	|* Record the record-data
+	\**************************************************************************/
+
+	if (item->size() > 0)
 		{
-		_close();
-		_lastError	= QString("Cannot append %1 to %2")
-						.arg(item->name(), _file);
-		ok			= false;
+		if (fwrite(item->data()->out, item->data()->dataSize, 1, _fp) != 1)
+			{
+			_close();
+			_lastError	= QString("Cannot append %1 to %2")
+							.arg(item->name(), _file);
+			ok			= false;
+			}
 		}
 	return ok;
 	}

@@ -1,0 +1,7 @@
+Known bugs:
+
+ - Currently compression expands things massively! 
+ 	- Need to use an 'inBufferSize' and an 'outBufferSize' and only increase the size
+ 		of the 'outBufferSize'. We're currently compressing at least 128K of extra data
+ 		for every item...
+ 		

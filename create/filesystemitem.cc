@@ -4,6 +4,8 @@
 
 #include "util/scalednumber.h"
 
+#define BUFFER_SLOP		(128000)
+
 /******************************************************************************\
 |* Represent anything we find on disk
 |*
@@ -144,7 +146,8 @@ bool FilesystemItem::compress(void)
 				_lastError = QString("Ran out of memory");
 				}
 			}
-		else if (_data->consumed == _size)
+
+		if (_data->consumed == _size)
 			{
 			int status = BZ2_bzCompress(&(_data->bzip), BZ_FINISH);
 			_data->dataSize = _data->bzip.avail_out;
@@ -204,6 +207,8 @@ bool FilesystemItem::_prepareBuffer(void)
 		{
 		_data->state		= IO_READING;
 		_data->bufferSize	= (_size >= _blockSize) ? _blockSize : _size;
+		if (_data->bufferSize < BUFFER_SLOP)
+			_data->bufferSize = BUFFER_SLOP;
 
 		/**********************************************************************\
 		|* Allocate the input buffer if we're compressing data
